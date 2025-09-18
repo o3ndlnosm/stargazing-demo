@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>觀星網頁 - 星空地圖</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #celestial-map {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .controls h3 {
+            margin: 0 0 10px 0;
+            color: #fff;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 5px;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #4a4a4a;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        button:hover {
+            background: #5a5a5a;
+        }
+
+        /* 星座資訊面板樣式 */
+        .constellation-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 20, 0.9);
+            border: 2px solid #4a4a4a;
+            border-radius: 15px;
+            padding: 20px;
+            width: 350px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 10px 50px rgba(0, 100, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .constellation-info h2 {
+            color: #6ce1ff;
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            border-bottom: 2px solid #4a4a4a;
+            padding-bottom: 10px;
+        }
+
+        .constellation-info .symbol {
+            font-size: 36px;
+            float: right;
+            margin: -5px 0 0 10px;
+        }
+
+        .constellation-info .info-section {
+            margin: 15px 0;
+        }
+
+        .constellation-info .info-section h3 {
+            color: #ffcc99;
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+
+        .constellation-info .info-section p {
+            margin: 5px 0;
+            line-height: 1.6;
+        }
+
+        .constellation-info .story {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #6ce1ff;
+        }
+
+        .constellation-info .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .constellation-info .close-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div id="celestial-map"></div>
+
+    <div class="controls">
+        <h3>觀星控制</h3>
+
+        <div class="control-group">
+            <label for="magnitude">星等限制:</label>
+            <input type="range" id="magnitude" min="1" max="6" value="5" step="0.5">
+            <span id="mag-value">5.0</span>
+        </div>
+
+        <div class="control-group">
+            <label for="projection">投影方式:</label>
+            <select id="projection">
+                <option value="airy">Airy</option>
+                <option value="aitoff">Aitoff</option>
+                <option value="armadillo">Armadillo</option>
+                <option value="august">August</option>
+                <option value="azimuthalEqualArea">方位角等面積</option>
+                <option value="azimuthalEquidistant">方位角等距</option>
+                <option value="baker">Baker</option>
+                <option value="berghaus">Berghaus</option>
+                <option value="boggs">Boggs</option>
+                <option value="bonne">Bonne</option>
+                <option value="cassini">Cassini</option>
+                <option value="collignon">Collignon</option>
+                <option value="craig">Craig</option>
+                <option value="craster">Craster</option>
+                <option value="cylindricalEqualArea">圓柱等面積</option>
+                <option value="cylindricalStereographic">圓柱立體</option>
+                <option value="eckert1">Eckert I</option>
+                <option value="eckert2">Eckert II</option>
+                <option value="eckert3">Eckert III</option>
+                <option value="eckert4">Eckert IV</option>
+                <option value="eckert5">Eckert V</option>
+                <option value="eckert6">Eckert VI</option>
+                <option value="eisenlohr">Eisenlohr</option>
+                <option value="equirectangular">等距圓柱</option>
+                <option value="fahey">Fahey</option>
+                <option value="foucaut">Foucaut</option>
+                <option value="ginzburg4">Ginzburg IV</option>
+                <option value="ginzburg5">Ginzburg V</option>
+                <option value="ginzburg6">Ginzburg VI</option>
+                <option value="ginzburg8">Ginzburg VIII</option>
+                <option value="ginzburg9">Ginzburg IX</option>
+                <option value="gnomonic">心射</option>
+                <option value="gringorten">Gringorten</option>
+                <option value="hammer">Hammer</option>
+                <option value="hatano">Hatano</option>
+                <option value="healpix">HEALPix</option>
+                <option value="hill">Hill</option>
+                <option value="homolosine">Homolosine</option>
+                <option value="kavrayskiy7">Kavrayskiy VII</option>
+                <option value="lagrange">Lagrange</option>
+                <option value="larrivee">Larrivée</option>
+                <option value="laskowski">Laskowski</option>
+                <option value="loximuthal">Loximuthal</option>
+                <option value="mercator">麥卡托</option>
+                <option value="miller">Miller</option>
+                <option value="mollweide">Mollweide</option>
+                <option value="mtFlatPolarParabolic">McBryde-Thomas</option>
+                <option value="mtFlatPolarQuartic">McBryde-Thomas</option>
+                <option value="mtFlatPolarSinusoidal">McBryde-Thomas</option>
+                <option value="naturalEarth">Natural Earth</option>
+                <option value="nellHammer">Nell-Hammer</option>
+                <option value="orthographic" selected>正射</option>
+                <option value="patterson">Patterson</option>
+                <option value="polyconic">Polyconic</option>
+                <option value="rectangularPolyconic">Rectangular Polyconic</option>
+                <option value="robinson">Robinson</option>
+                <option value="satellite">Satellite</option>
+                <option value="sinuMollweide">Sinu-Mollweide</option>
+                <option value="sinusoidal">正弦</option>
+                <option value="stereographic">立體</option>
+                <option value="times">Times</option>
+                <option value="twoPointEquidistant">兩點等距</option>
+                <option value="vanDerGrinten">van der Grinten</option>
+                <option value="vanDerGrinten2">van der Grinten II</option>
+                <option value="vanDerGrinten3">van der Grinten III</option>
+                <option value="vanDerGrinten4">van der Grinten IV</option>
+                <option value="wagner4">Wagner IV</option>
+                <option value="wagner6">Wagner VI</option>
+                <option value="wagner7">Wagner VII</option>
+                <option value="wiechel">Wiechel</option>
+                <option value="winkel3">Winkel III</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <button onclick="toggleConstellations()">切換星座線</button>
+            <button onclick="toggleConstellationNames()">切換星座名稱</button>
+        </div>
+
+        <div class="control-group">
+            <button onclick="toggleMilkyWay()">切換銀河</button>
+            <button onclick="toggleGrid()">切換網格</button>
+        </div>
+
+        <div class="control-group">
+            <label style="color: #ccc; font-size: 14px; display: block; margin-bottom: 5px;">銀河顏色:</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px;">
+                <button onclick="changeMilkyWayColor('#6699cc')" style="background: #6699cc; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="藍色調"></button>
+                <button onclick="changeMilkyWayColor('#996666')" style="background: #996666; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="原始棕紅色"></button>
+                <button onclick="changeMilkyWayColor('#cc9966')" style="background: #cc9966; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="金黃色"></button>
+                <button onclick="changeMilkyWayColor('#9966cc')" style="background: #9966cc; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="紫色調"></button>
+                <button onclick="changeMilkyWayColor('#66cc99')" style="background: #66cc99; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="青綠色"></button>
+                <button onclick="changeMilkyWayColor('#cc6699')" style="background: #cc6699; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="粉紫色"></button>
+                <button onclick="changeMilkyWayColor('#99cc66')" style="background: #99cc66; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="草綠色"></button>
+                <button onclick="changeMilkyWayColor('#666699')" style="background: #666699; width: 30px; height: 25px; border: 1px solid #fff; border-radius: 4px; cursor: pointer;" title="深藍色"></button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <button onclick="toggleMeteorShowers()">切換流星雨</button>
+        </div>
+        
+        <div class="control-group">
+            <label style="color: #ccc; font-size: 14px; display: block; margin-bottom: 5px;">十二星座導航:</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;">
+                <button onclick="showConstellationInfo('Aries')" style="font-size: 12px; padding: 4px 8px;">♈ 牡羊</button>
+                <button onclick="showConstellationInfo('Taurus')" style="font-size: 12px; padding: 4px 8px;">♉ 金牛</button>
+                <button onclick="showConstellationInfo('Gemini')" style="font-size: 12px; padding: 4px 8px;">♊ 雙子</button>
+                <button onclick="showConstellationInfo('Cancer')" style="font-size: 12px; padding: 4px 8px;">♋ 巨蟹</button>
+                <button onclick="showConstellationInfo('Leo')" style="font-size: 12px; padding: 4px 8px;">♌ 獅子</button>
+                <button onclick="showConstellationInfo('Virgo')" style="font-size: 12px; padding: 4px 8px;">♍ 處女</button>
+                <button onclick="showConstellationInfo('Libra')" style="font-size: 12px; padding: 4px 8px;">♎ 天秤</button>
+                <button onclick="showConstellationInfo('Scorpius')" style="font-size: 12px; padding: 4px 8px;">♏ 天蠍</button>
+                <button onclick="showConstellationInfo('Sagittarius')" style="font-size: 12px; padding: 4px 8px;">♐ 射手</button>
+                <button onclick="showConstellationInfo('Capricornus')" style="font-size: 12px; padding: 4px 8px;">♑ 摩羯</button>
+                <button onclick="showConstellationInfo('Aquarius')" style="font-size: 12px; padding: 4px 8px;">♒ 水瓶</button>
+                <button onclick="showConstellationInfo('Pisces')" style="font-size: 12px; padding: 4px 8px;">♓ 雙魚</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label style="color: #ccc; font-size: 14px; display: block; margin-bottom: 5px;">著名星座:</label>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="showConstellationInfo('Orion')" style="font-size: 12px; padding: 4px 8px; background: linear-gradient(45deg, #4a90e2, #7bb3f0); border: none; border-radius: 4px; color: white;">🏹 獵戶座</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <button onclick="resetView()">重置視圖</button>
+            <button onclick="showAllSkyView()">全天視圖</button>
+        </div>
+    </div>
+
+    <div class="info">
+        <h4>觀星指南</h4>
+        <p>使用滑鼠拖拽旋轉星圖，滾輪縮放。點擊星座或天體查看詳細資訊。</p>
+        <p id="location-info">正在獲取位置...</p>
+
+        <div id="meteor-shower-status" style="margin-top: 10px;">
+            <h5>流星雨狀態</h5>
+            <div id="active-showers">檢查中...</div>
+        </div>
+    </div>
+
+    <!-- 星座資訊面板 -->
+    <div id="constellation-info-panel" class="constellation-info">
+        <button class="close-btn" onclick="closeConstellationInfo()">×</button>
+        <h2 id="constellation-title">
+            <span id="constellation-name"></span>
+            <span id="constellation-symbol" class="symbol"></span>
+        </h2>
+
+        <div class="info-section">
+            <p><strong>日期：</strong><span id="constellation-dates"></span></p>
+            <p><strong>元素：</strong><span id="constellation-element"></span></p>
+            <p><strong>守護星：</strong><span id="constellation-ruler"></span></p>
+            <p><strong>最佳觀測時間：</strong><span id="constellation-viewing"></span></p>
+        </div>
+
+        <div class="info-section">
+            <h3>🌟 主要恆星</h3>
+            <p id="constellation-stars"></p>
+        </div>
+
+        <div class="info-section story">
+            <h3>📖 神話故事</h3>
+            <p id="constellation-story"></p>
+        </div>
+
+        <div class="info-section">
+            <h3>🏛️ 文化傳說</h3>
+            <p id="constellation-mythology"></p>
+        </div>
+    </div>
+
+    <!-- D3.js v3 本地版 (d3-celestial 需要舊版 D3) -->
+    <script src="libs/d3.v3.min.js"></script>
+    <script src="libs/d3.geo.projection.v0.min.js"></script>
+
+    <!-- d3-celestial 庫 優化版 -->
+    <script src="libs/celestial-optimized.js"></script>
+
+    <script>
+        // 等待所有庫載入完成再執行主程式
+        window.addEventListener('load', function() {
+            console.log('檢查庫載入狀態...');
+            console.log('d3:', typeof d3);
+            console.log('Celestial:', typeof Celestial);
+
+            if (typeof d3 !== 'undefined' && typeof Celestial !== 'undefined') {
+                console.log('所有庫已載入完成，開始初始化...');
+                initCelestialMap();
+            } else {
+                console.error('載入失敗: d3=' + typeof d3 + ', Celestial=' + typeof Celestial);
+
+                // 顯示錯誤訊息
+                document.getElementById('celestial-map').innerHTML =
+                    '<div style="color: white; text-align: center; padding: 50px;">' +
+                    '<h2>載入錯誤</h2>' +
+                    '<p>無法載入星圖庫</p>' +
+                    '<p>d3: ' + typeof d3 + '</p>' +
+                    '<p>Celestial: ' + typeof Celestial + '</p>' +
+                    '<p>請檢查網路連線或嘗試重新整理頁面</p>' +
+                    '</div>';
+            }
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
