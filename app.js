@@ -370,6 +370,20 @@ const zodiacConstellations = {
     mythology:
       "雙魚座的兩條魚分別游向不同方向，象徵著靈性與物質、理想與現實的拉扯。春分點曾經在雙魚座，現已因歲差移至寶瓶座。",
   },
+  Orion: {
+    name: "獵戶座",
+    symbol: "🏹",
+    dates: "全年可見",
+    element: "冬季星座",
+    ruler: "西方神話",
+    story:
+      "獵戶座是希臘神話中最偉大的獵人奧利安。他聲稱要殺盡世界上所有的野獸，激怒了大地之母蓋亞，派出天蠍刺死了他。宙斯為了紀念這位偉大的獵人，將他升上天空成為星座。獵戶座和天蠍座永遠不會同時出現在天空中。",
+    traits: "勇敢、技藝高超、自負、冒險精神、追求完美",
+    mainStars: "參宿四（α Orionis，Betelgeuse）- 獵戶左肩、參宿七（β Orionis，Rigel）- 獵戶左腳、參宿一（ζ Orionis，Alnitak）、參宿二（ε Orionis，Alnilam）、參宿三（δ Orionis，Mintaka）- 獵戶腰帶三星",
+    bestViewing: "12月至2月",
+    mythology:
+      "獵戶座中最著名的是獵戶腰帶三星，在中國稱為『參宿』。獵戶座星雲（M42）是肉眼可見最亮的星雲，是恆星誕生的搖籃。參宿四是著名的紅超巨星，直徑超過太陽的1000倍。",
+  },
 };
 
 // 流星雨數據庫
@@ -770,10 +784,9 @@ function showAllSkyView() {
   console.log("平滑切換到全天視圖");
 
   const targetCenter = [0, 0, 0];
-  const currentCenter = currentConfig.center || [0, 0, 0];
 
   // 使用內建動畫回到全天視圖
-  animateToPosition(currentCenter, targetCenter, 1200);
+  animateToPosition(targetCenter, 1200);
 }
 
 // 移除 DOMContentLoaded 事件，改由 HTML 中的 window.load 觸發
@@ -898,12 +911,13 @@ function getConstellationCenter(constellationKey) {
     Capricornus: [308.3, -17.2], // 壘壁陣四附近
     Aquarius: [331.4, -9.9], // 危宿一附近（水瓶中心）
     Pisces: [23.7, 3.8], // 雙魚中間位置
+    Orion: [84.0, 6.0], // 獵戶腰帶中心位置（參宿二附近）
   };
   return centers[constellationKey];
 }
 
 // 使用 Celestial.rotate 實現真正的平滑動畫
-function animateToPosition(startCenter, endCenter, duration = 1200) {
+function animateToPosition(endCenter, duration = 1200) {
   if (isAnimating) {
     console.log("動畫進行中，忽略新的請求");
     return;
@@ -984,7 +998,7 @@ function centerOnConstellation(constellationKey) {
   console.log(`目標位置: [${targetCenter[0].toFixed(1)}, ${targetCenter[1].toFixed(1)}]`);
 
   // 開始平滑動畫
-  animateToPosition(currentCenter, targetCenter, 1200);
+  animateToPosition(targetCenter, 1200);
 }
 
 // 點擊外部關閉面板
